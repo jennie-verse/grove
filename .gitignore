@@ -1,0 +1,6 @@
+.DS_Store
+grove-map-*.json
+grove-backup-*.json
+grove-recovery-*.json
+*.zip
+.fuse_hidden*
