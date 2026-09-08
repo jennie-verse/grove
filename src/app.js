@@ -76,35 +76,7 @@ const defaultPreferences = {
   lastBackupAt: null,
 };
 
-// One-time fresh-start reset for the 2026.09.05 first-release rebuild. Wipes
-// only grove's own localStorage keys and its own IndexedDB database — never
-// "sync.token.v1" (a GitHub token shared across all apps on this origin) and
-// never anything under ../../shared/v1, which other apps also read. Gated on
-// a dedicated marker so it runs exactly once, not on every load of this build.
-function runFreshStartOnce() {
-  const FRESH_START_STAMP = "2026.09.05-firstrelease1";
-  try {
-    if (localStorage.getItem("grove.freshStartDone") === FRESH_START_STAMP) return;
-    [
-      "grove-preferences-v2",
-      "grove.journalEnabled.v1",
-      "grove.journalActivity.v1",
-      "grove.journalSessions.v1",
-      "grove.syncEnabled",
-      "grove.lastSyncAt",
-      "grove.lastRemoteBackupAt",
-      "grove.pendingEvents",
-      "grove.deletedMaps",
-      "grove.syncContextId",
-      "grove.syncContextLabel",
-    ].forEach((key) => localStorage.removeItem(key));
-    indexedDB.deleteDatabase("grove-db");
-    localStorage.setItem("grove.freshStartDone", FRESH_START_STAMP);
-  } catch {
-    // Best effort — if storage is unavailable the app still starts normally.
-  }
-}
-runFreshStartOnce();
+// Startup preserves existing maps and preferences, including pre-release data.
 
 let preferences = readPreferences();
 let composing = false;
@@ -112,6 +84,7 @@ let saveTimer = null;
 let viewTimer = null;
 let pointerFrame = null;
 let activeSave = null;
+let editGeneration = 0;
 let pendingInlineEdit = null;
 const usageSessions = createSessionTracker({
   kind: "usage-session", itemType: "mind-map", storageKey: "grove.journalSessions.v1",
@@ -1835,6 +1808,7 @@ function mutateMap(label, mutation, { success = null } = {}) {
 function markDirty() {
   if (!canMutateMap()) return false;
   state.dirty = true;
+  editGeneration += 1;
   scheduleSave();
   updateSaveState();
   return true;
@@ -1853,6 +1827,7 @@ function updateSaveState() {
 }
 
 async function flushSave() {
+  if (!state.previewOnly) pendingInlineEdit?.commit();
   clearTimeout(saveTimer);
   if (state.previewOnly) return !state.saveError;
   if (state.saving && activeSave) return activeSave;
@@ -1860,16 +1835,21 @@ async function flushSave() {
   state.saving = true;
   updateSaveState();
   activeSave = (async () => { try {
-    const result = await putRecord({ id: state.map.id, map: clone(state.map), thumbnail: null }, state.record?.revision ?? 0);
-    state.record = result;
-    const index = state.records.findIndex((record) => record.id === result.id);
-    if (index >= 0) state.records[index] = result;
-    else state.records.unshift(result);
-    state.dirty = false;
-    state.saveError = null;
-    broadcast({ type: "map-saved", id: result.id, revision: result.revision });
-    journal.recordActivity(result.map, "edited").catch(() => {});
-    syncRunner.schedulePush();
+    // Edits can arrive while IndexedDB is writing. Drain them before reporting
+    // Saved or allowing callers to leave the map.
+    while (state.dirty) {
+      const generation = editGeneration;
+      const result = await putRecord({ id: state.map.id, map: clone(state.map), thumbnail: null }, state.record?.revision ?? 0);
+      state.record = result;
+      const index = state.records.findIndex((record) => record.id === result.id);
+      if (index >= 0) state.records[index] = result;
+      else state.records.unshift(result);
+      state.dirty = editGeneration !== generation;
+      state.saveError = null;
+      broadcast({ type: "map-saved", id: result.id, revision: result.revision });
+      journal.recordActivity(result.map, "edited").catch(() => {});
+      syncRunner.schedulePush();
+    }
     return true;
   } catch (error) {
     state.saveError = error;
