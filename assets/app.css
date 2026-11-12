@@ -60,6 +60,10 @@
 
 * { box-sizing: border-box; }
 
+/* Taps respond at once (no double-tap-zoom delay); pinch zoom is unchanged.
+   Canvas and nodes keep their own touch-action: none below. */
+button, input, select, textarea, label, summary, a { touch-action: manipulation; }
+
 html,
 body,
 #app {
@@ -1493,6 +1497,13 @@ select,
   .export-row .tool-btn { width: 44px; padding: 0; font-size: 0; }
   .export-row .tool-btn svg { width: 20px; height: 20px; }
   .compare-grid { grid-template-columns: 1fr; }
+}
+
+/* Folded (narrow) phone width: the node toolbar is nearly full width, so lift
+   the zoom controls above it instead of letting the two overlap. */
+@media (max-width: 540px) {
+  .editor:not(.has-inspector) .canvas-controls { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 56px); }
+  .editor.has-inspector .canvas-controls { bottom: calc(min(58dvh, var(--visual-height) - 116px) + 66px); }
 }
 
 @media (orientation: landscape) and (max-height: 520px) and (max-width: 899px) {

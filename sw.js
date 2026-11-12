@@ -1,7 +1,7 @@
 // Keep VERSION in step with APP_BUILD in ./src/version.js.
 // The Settings dialog shows APP_BUILD so a stale cached build is visible at a
 // glance — "deployed" and "running on the device" are not the same thing.
-const VERSION = "2026.09.08-data-safety";
+const VERSION = "2026.11.12-foldable1";
 const CACHE_NAME = `grove-${VERSION}`;
 
 // Required to run. addAll() is deliberate here: if one of these is missing the
