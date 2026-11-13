@@ -1992,6 +1992,17 @@ function focusSearchResult(result) {
   render();
 }
 
+// Reads the device safe-area insets (0 where there are none) so fixed menus can stay clear of them.
+function safeAreaInsets() {
+  const probe = document.createElement("div");
+  probe.style.cssText = "position:fixed;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)";
+  document.body.append(probe);
+  const style = getComputedStyle(probe);
+  const insets = { top: parseFloat(style.paddingTop) || 0, bottom: parseFloat(style.paddingBottom) || 0 };
+  probe.remove();
+  return insets;
+}
+
 function openRowMenu(id, anchor) {
   $(".row-menu")?.remove();
   const record = state.records.find((item) => item.id === id);
@@ -2047,8 +2058,9 @@ function openRowMenu(id, anchor) {
   };
   document.body.append(menu);
   const rect = anchor.getBoundingClientRect();
+  const inset = safeAreaInsets();
   const left = clamp(rect.right - 180, 8, window.innerWidth - 188);
-  const top = clamp(rect.bottom + 6, 8, window.innerHeight - 282);
+  const top = clamp(rect.bottom + 6, inset.top + 8, window.innerHeight - 282 - inset.bottom);
   menu.style.left = `${left}px`;
   menu.style.top = `${top}px`;
   setTimeout(() => document.addEventListener("pointerdown", function outside(event) {

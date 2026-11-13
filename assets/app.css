@@ -414,7 +414,7 @@ select:focus-visible,
   height: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: 74px minmax(0, 1fr);
+  grid-template-rows: calc(74px + env(safe-area-inset-top)) minmax(0, 1fr);
   background: var(--bg);
 }
 
@@ -520,7 +520,7 @@ select:focus-visible,
 
 .save-error-banner {
   position: absolute;
-  top: 86px;
+  top: calc(86px + env(safe-area-inset-top));
   left: 16px;
   right: calc(320px + 16px);
   z-index: 9;
@@ -782,7 +782,7 @@ select:focus-visible,
 .inspector {
   min-width: 0;
   position: absolute;
-  top: 86px;
+  top: calc(86px + env(safe-area-inset-top));
   right: 12px;
   bottom: 12px;
   width: 320px;
@@ -989,7 +989,7 @@ select,
 
 .outline-panel {
   position: absolute;
-  top: 74px;
+  top: calc(74px + env(safe-area-inset-top));
   bottom: 0;
   left: 0;
   z-index: 7;
@@ -1035,7 +1035,7 @@ select,
   position: fixed;
   inset: 0;
   z-index: 30;
-  padding: 20px;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
   display: grid;
   place-items: center;
   background: rgba(53, 35, 42, 0.26);
@@ -1043,7 +1043,7 @@ select,
 
 .dialog {
   width: min(480px, 100%);
-  max-height: calc(var(--visual-height) - 40px);
+  max-height: calc(var(--visual-height) - max(20px, env(safe-area-inset-top)) - max(20px, env(safe-area-inset-bottom)));
   padding: 23px;
   border: 1px solid var(--border);
   border-radius: 16px;
@@ -1182,7 +1182,7 @@ select,
 .danger-zone { background: color-mix(in srgb, var(--danger) 8%, var(--surface)); }
 .danger-zone p { margin: 0; }
 
-.search-backdrop { padding-top: 12vh; align-items: start; }
+.search-backdrop { padding-top: max(12vh, env(safe-area-inset-top)); align-items: start; }
 .search-dialog { width: min(620px, 100%); }
 .search-results { max-height: 360px; margin-top: 12px; overflow: auto; }
 .search-results button {
@@ -1311,7 +1311,7 @@ select,
   .editor.has-inspector { grid-template-columns: minmax(0, 1fr); }
   .inspector {
     position: absolute;
-    top: 86px;
+    top: calc(86px + env(safe-area-inset-top));
     right: 12px;
     bottom: 12px;
     width: 320px;
@@ -1320,7 +1320,7 @@ select,
     box-shadow: var(--shadow);
   }
   .outline-panel {
-    top: 86px;
+    top: calc(86px + env(safe-area-inset-top));
     bottom: 12px;
     left: 12px;
     border: 1px solid var(--border);
@@ -1477,7 +1477,7 @@ select,
   .link-mode { top: 10px; max-width: calc(100% - 20px); }
   .dialog { padding: 19px; border-radius: 15px; }
   .settings-dialog > label { grid-template-columns: 1fr 130px; }
-  .search-backdrop { padding-top: 6vh; }
+  .search-backdrop { padding-top: max(6vh, env(safe-area-inset-top)); }
   .empty-state { padding: 40px 0; }
   .empty-state > div:last-of-type { flex-wrap: wrap; justify-content: center; }
   #toasts { right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; }
@@ -1507,6 +1507,14 @@ select,
   .editor.has-inspector .canvas-controls { bottom: calc(min(58dvh, var(--visual-height) - 116px) + 66px); }
 }
 
+/* Tier A below the 900px desktop breakpoint (unfolded portrait): there is room
+   for Outline and Settings in the header, so show them instead of hiding them. */
+@media (min-width: 640px) and (min-height: 560px) and (max-width: 899px) {
+  .editor-actions { max-width: none; flex-wrap: nowrap; }
+  .editor-actions .icon-btn:nth-of-type(4),
+  .editor-actions .icon-btn:nth-of-type(5) { display: flex; }
+}
+
 @media (orientation: landscape) and (max-height: 520px) and (max-width: 899px) {
   .editor-top {
     height: calc(64px + env(safe-area-inset-top));
@@ -1514,9 +1522,13 @@ select,
     grid-template-rows: 54px;
   }
   .maps-btn { display: none; }
+  /* The Maps button is hidden here, so the logo is the way back to the library;
+     lift it above the title button that spans the same grid cell. */
+  .brand.compact { position: relative; z-index: 1; }
+  .brand.compact::before { content: ""; position: absolute; inset: -9px -6px; }
   .canvas { top: calc(64px + env(safe-area-inset-top)); }
   .inspector,
-  .outline-panel { max-height: calc(var(--visual-height) - 70px); width: min(52vw, 420px); left: auto; border-radius: 18px 0 0 18px; }
+  .outline-panel { max-height: calc(var(--visual-height) - max(70px, env(safe-area-inset-top) + 8px)); width: min(52vw, 420px); left: auto; border-radius: 18px 0 0 18px; }
   .mini-toolbar { bottom: max(10px, env(safe-area-inset-bottom)); }
   .editor.has-inspector .canvas-controls {
     right: calc(min(52vw, 420px) + 10px);
