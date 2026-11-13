@@ -1499,9 +1499,10 @@ select,
   .compare-grid { grid-template-columns: 1fr; }
 }
 
-/* Folded (narrow) phone width: the node toolbar is nearly full width, so lift
-   the zoom controls above it instead of letting the two overlap. */
-@media (max-width: 540px) {
+/* Folded and unfolded-portrait widths (<=720px): the centred node toolbar (306px)
+   and the right-aligned zoom controls (194px) no longer fit side by side, so lift
+   the zoom controls above the toolbar instead of letting the two overlap. */
+@media (max-width: 720px) {
   .editor:not(.has-inspector) .canvas-controls { bottom: calc(max(18px, env(safe-area-inset-bottom)) + 56px); }
   .editor.has-inspector .canvas-controls { bottom: calc(min(58dvh, var(--visual-height) - 116px) + 66px); }
 }

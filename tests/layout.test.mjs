@@ -15,13 +15,13 @@ test("foldable/Mac layout contract: no overscroll bounce, fast taps, canvas keep
   assert.match(css, /\.node:hover/);
 });
 
-test("folded width (<=540px): zoom controls are lifted above the node toolbar so they do not overlap", () => {
+test("folded and unfolded-portrait widths (<=720px, incl. 669): zoom controls are lifted above the node toolbar so they do not overlap", () => {
   const css = read("assets/app.css");
-  assert.match(css, /@media \(max-width: 540px\) \{\s*\.editor:not\(\.has-inspector\) \.canvas-controls \{ bottom: calc\(/);
+  assert.match(css, /@media \(max-width: 720px\) \{\s*\.editor:not\(\.has-inspector\) \.canvas-controls \{ bottom: calc\(/);
 });
 
 test("the build stamp in version.js matches VERSION in sw.js and is the foldable build", () => {
   const stamp = read("src/version.js").match(/APP_BUILD = "([^"]+)"/)[1];
   assert.equal(read("sw.js").match(/const VERSION = "([^"]+)"/)[1], stamp);
-  assert.equal(stamp, "2026.11.12-foldable1");
+  assert.equal(stamp, "2026.11.12-foldable2");
 });
